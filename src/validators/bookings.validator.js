@@ -25,8 +25,24 @@ const addServiceToBookingSchema = z.object({
   sid: z.string({ required_error: 'sid es obligatorio' }).regex(objectIdRegex, 'sid debe ser un ObjectId válido')
 });
 
+const bookingServiceParamsSchema = z.object({
+  bid: z.string({ required_error: 'bid es obligatorio' }).regex(objectIdRegex, 'bid debe ser un ObjectId válido'),
+  sid: z.string({ required_error: 'sid es obligatorio' }).regex(objectIdRegex, 'sid debe ser un ObjectId válido')
+});
+
+const bookingIdParamsSchema = z.object({
+  bid: z.string({ required_error: 'bid es obligatorio' }).regex(objectIdRegex, 'bid debe ser un ObjectId válido')
+});
+
+const updateServiceQuantitySchema = z.object({
+  quantity: z.number({ required_error: 'quantity es obligatoria', invalid_type_error: 'quantity debe ser un número' }).int('quantity debe ser un entero').min(1, 'quantity debe ser al menos 1')
+}).strict();
+
 module.exports = {
   createBookingSchema,
   updateBookingSchema,
-  addServiceToBookingSchema
+  addServiceToBookingSchema,
+  bookingServiceParamsSchema,
+  bookingIdParamsSchema,
+  updateServiceQuantitySchema
 };

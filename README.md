@@ -60,6 +60,9 @@ npm run dev
 npm start
 ```
 
+> Sin Atlas/credenciales: `npm run demo` levanta Mongo en memoria con datos
+> de prueba (3 servicios, 2 reservas). No requiere `.env`.
+
 ## Endpoints
 ```
 GET    /                                health
@@ -74,6 +77,9 @@ GET    /api/bookings/:bid               populate
 PUT    /api/bookings/:bid
 DELETE /api/bookings/:bid
 POST   /api/bookings/:bid/services/:sid asocia servicio (quantity++)
+PUT    /api/bookings/:bid/services/:sid modifica quantity. Body: {"quantity": 3}
+DELETE /api/bookings/:bid/services/:sid elimina ese servicio de la reserva
+DELETE /api/bookings/:bid/services     vacía todos los servicios de la reserva
 GET    /views/services                  Handlebars
 GET    /views/availability              Handlebars services + bookings
 GET    /views/bookings                  alias availability

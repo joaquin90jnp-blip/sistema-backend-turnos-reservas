@@ -73,11 +73,51 @@ const addServiceToBooking = async (req, res) => {
   }
 };
 
+const updateServiceQuantity = async (req, res) => {
+  try {
+    const { bid, sid } = req.params;
+    const { quantity } = req.body;
+    const updatedBooking = await bookingsService.updateServiceQuantity(bid, sid, quantity);
+    const io = req.app.get('socketio');
+    if (io) io.emit('bookingUpdated', updatedBooking);
+    res.json({ status: 'success', payload: updatedBooking });
+  } catch (error) {
+    res.status(error.status || 500).json({ status: 'error', error: error.message });
+  }
+};
+
+const removeServiceFromBooking = async (req, res) => {
+  try {
+    const { bid, sid } = req.params;
+    const updatedBooking = await bookingsService.removeServiceFromBooking(bid, sid);
+    const io = req.app.get('socketio');
+    if (io) io.emit('bookingUpdated', updatedBooking);
+    res.json({ status: 'success', payload: updatedBooking, message: `Servicio con id ${sid} eliminado de la reserva ${bid}` });
+  } catch (error) {
+    res.status(error.status || 500).json({ status: 'error', error: error.message });
+  }
+};
+
+const clearBookingServices = async (req, res) => {
+  try {
+    const { bid } = req.params;
+    const updatedBooking = await bookingsService.clearBookingServices(bid);
+    const io = req.app.get('socketio');
+    if (io) io.emit('bookingUpdated', updatedBooking);
+    res.json({ status: 'success', payload: updatedBooking, message: `Servicios de la reserva ${bid} vaciados` });
+  } catch (error) {
+    res.status(error.status || 500).json({ status: 'error', error: error.message });
+  }
+};
+
 module.exports = {
   createBooking,
   getBookings,
   getBookingById,
   updateBooking,
   deleteBooking,
-  addServiceToBooking
+  addServiceToBooking,
+  updateServiceQuantity,
+  removeServiceFromBooking,
+  clearBookingServices
 };

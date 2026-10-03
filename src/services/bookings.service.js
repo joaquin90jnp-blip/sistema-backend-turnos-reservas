@@ -194,11 +194,114 @@ const addServiceToBooking = async (bid, sid) => {
   return await bookingsRepository.update(bid, updatedData);
 };
 
+const _stripForSave = (booking) => {
+  const servicesToSave = (booking.services || []).map((item) => ({
+    service: item.service?._id ? item.service._id : item.service,
+    quantity: item.quantity
+  }));
+
+  const updatedData = {
+    ...booking,
+    services: servicesToSave
+  };
+
+  delete updatedData._id;
+  delete updatedData.__v;
+  delete updatedData.createdAt;
+  delete updatedData.updatedAt;
+
+  return updatedData;
+};
+
+const updateServiceQuantity = async (bid, sid, quantity) => {
+  _validateObjectId(bid);
+  _validateObjectId(sid);
+
+  const qty = Number(quantity);
+  if (!Number.isInteger(qty) || qty < 1) {
+    const err = new Error('quantity debe ser un entero mayor o igual a 1');
+    err.status = 400;
+    throw err;
+  }
+
+  const booking = await bookingsRepository.getById(bid);
+  if (!booking) {
+    const err = new Error(`Reserva con id ${bid} no encontrada`);
+    err.status = 404;
+    throw err;
+  }
+
+  if (!Array.isArray(booking.services)) {
+    booking.services = [];
+  }
+
+  const existing = booking.services.find((item) => {
+    const serviceId = item.service?._id ? item.service._id.toString() : item.service.toString();
+    return serviceId === sid.toString();
+  });
+
+  if (!existing) {
+    const err = new Error(`El servicio con id ${sid} no está asociado a la reserva ${bid}`);
+    err.status = 404;
+    throw err;
+  }
+
+  existing.quantity = qty;
+
+  return await bookingsRepository.update(bid, _stripForSave(booking));
+};
+
+const removeServiceFromBooking = async (bid, sid) => {
+  _validateObjectId(bid);
+  _validateObjectId(sid);
+
+  const booking = await bookingsRepository.getById(bid);
+  if (!booking) {
+    const err = new Error(`Reserva con id ${bid} no encontrada`);
+    err.status = 404;
+    throw err;
+  }
+
+  if (!Array.isArray(booking.services)) {
+    booking.services = [];
+  }
+
+  const before = booking.services.length;
+  booking.services = booking.services.filter((item) => {
+    const serviceId = item.service?._id ? item.service._id.toString() : item.service.toString();
+    return serviceId !== sid.toString();
+  });
+
+  if (booking.services.length === before) {
+    const err = new Error(`El servicio con id ${sid} no está asociado a la reserva ${bid}`);
+    err.status = 404;
+    throw err;
+  }
+
+  return await bookingsRepository.update(bid, _stripForSave(booking));
+};
+
+const clearBookingServices = async (bid) => {
+  _validateObjectId(bid);
+
+  const booking = await bookingsRepository.getById(bid);
+  if (!booking) {
+    const err = new Error(`Reserva con id ${bid} no encontrada`);
+    err.status = 404;
+    throw err;
+  }
+
+  return await bookingsRepository.update(bid, { services: [] });
+};
+
 module.exports = {
   createBooking,
   getBookingById,
   getBookings,
   updateBooking,
   deleteBooking,
-  addServiceToBooking
+  addServiceToBooking,
+  updateServiceQuantity,
+  removeServiceFromBooking,
+  clearBookingServices
 };
