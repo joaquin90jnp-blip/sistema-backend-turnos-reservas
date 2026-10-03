@@ -1,0 +1,38 @@
+{
+  "name": "sistema-backend-turnos-reservas",
+  "version": "1.0.0",
+  "description": "Sistema Backend de Turnos y Reservas — MongoDB Atlas + Mongoose + Handlebars + Socket.io + Zod + Paginación. Arquitectura en capas.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "keywords": [
+    "express",
+    "mongodb",
+    "mongoose",
+    "handlebars",
+    "socket.io",
+    "zod",
+    "pagination",
+    "populate"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-handlebars": "^7.1.2",
+    "mongoose": "^7.5.0",
+    "socket.io": "^4.7.2",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^11.3.0",
+    "nodemon": "^3.0.1",
+    "socket.io-client": "^4.8.4"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

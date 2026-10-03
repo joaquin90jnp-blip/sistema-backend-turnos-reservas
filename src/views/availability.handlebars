@@ -1,0 +1,148 @@
+<section>
+  <h2>Disponibilidad y Reservas</h2>
+  <p>Vista con datos reales de MongoDB (services + bookings) vía arquitectura en capas. Actualización en tiempo real con Socket.io.</p>
+  <div id="realtime-status" class="status">Tiempo real activo</div>
+  <p>Servicios: <strong>{{services.length}}</strong> | Reservas: <strong id="bookings-count">{{bookings.length}}</strong></p>
+</section>
+
+<section class="grid">
+  <div class="card">
+    <h3>Servicios y disponibilidad</h3>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Categoría</th>
+          <th>Duración</th>
+          <th>Precio</th>
+          <th>Disponible</th>
+        </tr>
+      </thead>
+      <tbody id="availability-services-body">
+        {{#each services}}
+        <tr data-id="{{this._id}}">
+          <td>{{this.name}}</td>
+          <td>{{this.category}}</td>
+          <td>{{this.duration}} min</td>
+          <td>${{this.price}}</td>
+          <td>
+            {{#if this.available}}<span class="badge available">Sí</span>
+            {{else}}<span class="badge unavailable">No</span>{{/if}}
+          </td>
+        </tr>
+        {{/each}}
+        {{#unless services.length}}
+        <tr><td colspan="5">Sin servicios</td></tr>
+        {{/unless}}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Reservas (bookings)</h3>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Email</th>
+          <th>Fecha</th>
+          <th>Hora</th>
+          <th>Estado</th>
+          <th>Servicios</th>
+        </tr>
+      </thead>
+      <tbody id="bookings-table-body">
+        {{#each bookings}}
+        <tr data-id="{{this._id}}">
+          <td>{{this.clientName}}</td>
+          <td>{{this.clientEmail}}</td>
+          <td>{{this.date}}</td>
+          <td>{{this.time}}</td>
+          <td><span class="badge status-{{this.status}}">{{this.status}}</span></td>
+          <td>
+            {{#if this.services.length}}
+              <ul>
+              {{#each this.services}}
+                <li>
+                  {{#if this.service.name}}
+                    {{this.service.name}} ({{this.service.category}}) × {{this.quantity}}
+                  {{else}}
+                    {{this.service}} × {{this.quantity}}
+                  {{/if}}
+                </li>
+              {{/each}}
+              </ul>
+            {{else}}
+              <em>Sin servicios</em>
+            {{/if}}
+          </td>
+        </tr>
+        {{/each}}
+        {{#unless bookings.length}}
+        <tr><td colspan="6">No hay reservas.</td></tr>
+        {{/unless}}
+      </tbody>
+    </table>
+
+    <h4>Crear reserva (tiempo real)</h4>
+    <form id="create-booking-form" class="form">
+      <input type="text" name="clientName" placeholder="Nombre cliente" required />
+      <input type="email" name="clientEmail" placeholder="Email" required />
+      <input type="text" name="date" placeholder="YYYY-MM-DD" pattern="\d{4}-\d{2}-\d{2}" required />
+      <input type="text" name="time" placeholder="HH:MM" pattern="\d{2}:\d{2}" required />
+      <select name="status">
+        <option value="pending">pending</option>
+        <option value="confirmed">confirmed</option>
+        <option value="cancelled">cancelled</option>
+      </select>
+      <button type="submit">Crear reserva</button>
+    </form>
+    <div id="booking-form-message"></div>
+
+    <h4>Agregar servicio a reserva (tiempo real)</h4>
+    <form id="add-service-form" class="form">
+      <input type="text" name="bid" placeholder="Booking ID" required />
+      <input type="text" name="sid" placeholder="Service ID" required />
+      <button type="submit">Agregar</button>
+    </form>
+  </div>
+</section>
+
+<script>
+  document.getElementById('create-booking-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const data = {
+      clientName: f.clientName.value,
+      clientEmail: f.clientEmail.value,
+      date: f.date.value,
+      time: f.time.value,
+      status: f.status.value
+    };
+    const res = await fetch('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    const msg = document.getElementById('booking-form-message');
+    if (res.ok) {
+      msg.textContent = 'Reserva creada ' + json.payload._id;
+      msg.className = 'success';
+      f.reset();
+    } else {
+      msg.textContent = 'Error: ' + json.error;
+      msg.className = 'error';
+    }
+  });
+
+  document.getElementById('add-service-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const bid = f.bid.value.trim();
+    const sid = f.sid.value.trim();
+    const res = await fetch(`/api/bookings/${bid}/services/${sid}`, { method: 'POST' });
+    const json = await res.json();
+    if (!res.ok) alert('Error: ' + json.error);
+  });
+</script>

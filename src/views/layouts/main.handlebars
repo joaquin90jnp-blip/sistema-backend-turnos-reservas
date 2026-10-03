@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{title}} - Sistema Turnos y Reservas</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <h1>Sistema Backend de Turnos y Reservas</h1>
+    <nav class="nav">
+      <a href="/">API Home</a>
+      <a href="/views/services">Servicios</a>
+      <a href="/views/availability">Disponibilidad</a>
+      <a href="/api/services" target="_blank">API Services</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    {{{body}}}
+  </main>
+
+  <footer class="footer">
+    <p>Arquitectura: router → controller → service → repository → DAO → MongoDB | Handlebars + Socket.io</p>
+  </footer>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/socket.js"></script>
+</body>
+</html>

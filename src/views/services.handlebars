@@ -1,0 +1,117 @@
+<section>
+  <h2>Listado de Servicios</h2>
+  <p>Cantidad: <strong id="services-count">{{services.length}}</strong> | Datos desde MongoDB vía capas (controller → service → repository → DAO)</p>
+
+  <div id="realtime-status" class="status">Conectado en tiempo real (Socket.io)</div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Descripción</th>
+        <th>Duración (min)</th>
+        <th>Precio</th>
+        <th>Categoría</th>
+        <th>Disponibilidad</th>
+        <th>ID</th>
+      </tr>
+    </thead>
+    <tbody id="services-table-body">
+      {{#each services}}
+      <tr data-id="{{this._id}}">
+        <td>{{this.name}}</td>
+        <td>{{this.description}}</td>
+        <td>{{this.duration}}</td>
+        <td>${{this.price}}</td>
+        <td>{{this.category}}</td>
+        <td>
+          {{#if this.available}}
+            <span class="badge available">Disponible</span>
+          {{else}}
+            <span class="badge unavailable">No disponible</span>
+          {{/if}}
+        </td>
+        <td class="mono">{{this._id}}</td>
+      </tr>
+      {{/each}}
+      {{#unless services.length}}
+      <tr><td colspan="7">No hay servicios cargados.</td></tr>
+      {{/unless}}
+    </tbody>
+  </table>
+</section>
+
+<section class="card">
+  <h3>Crear servicio (tiempo real)</h3>
+  <p>Al enviar, se usa <code>POST /api/services</code> y el listado se actualiza sin recargar vía Socket.io <code>serviceCreated</code>.</p>
+  <form id="create-service-form" class="form">
+    <input type="text" name="name" placeholder="Nombre" required />
+    <input type="text" name="description" placeholder="Descripción" required />
+    <input type="number" name="duration" placeholder="Duración (min)" required min="1" />
+    <input type="number" name="price" placeholder="Precio" required min="0" />
+    <input type="text" name="category" placeholder="Categoría" required />
+    <label>
+      <input type="checkbox" name="available" checked /> Disponible
+    </label>
+    <button type="submit">Crear servicio</button>
+  </form>
+  <div id="form-message"></div>
+</section>
+
+<section class="card">
+  <h3>Cambiar disponibilidad (tiempo real)</h3>
+  <p>Ingresa un ID y nuevo estado. Emite <code>serviceUpdated</code> y se refleja al instante.</p>
+  <form id="toggle-availability-form" class="form">
+    <input type="text" name="sid" placeholder="Service ID (_id)" required />
+    <select name="available">
+      <option value="true">Disponible</option>
+      <option value="false">No disponible</option>
+    </select>
+    <button type="submit">Actualizar</button>
+  </form>
+</section>
+
+<script>
+  document.getElementById('create-service-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const data = {
+      name: form.name.value,
+      description: form.description.value,
+      duration: Number(form.duration.value),
+      price: Number(form.price.value),
+      category: form.category.value,
+      available: form.available.checked
+    };
+    const res = await fetch('/api/services', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    const msg = document.getElementById('form-message');
+    if (res.ok) {
+      msg.textContent = 'Servicio creado: ' + json.payload.name;
+      msg.className = 'success';
+      form.reset();
+      form.available.checked = true;
+    } else {
+      msg.textContent = 'Error: ' + json.error;
+      msg.className = 'error';
+    }
+  });
+
+  document.getElementById('toggle-availability-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const sid = form.sid.value.trim();
+    const available = form.available.value === 'true';
+    const res = await fetch('/api/services/' + sid, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ available })
+    });
+    const json = await res.json();
+    if (!res.ok) alert('Error: ' + json.error);
+  });
+</script>
